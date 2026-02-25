@@ -1,0 +1,948 @@
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { 
+  Search, 
+  Filter, 
+  Zap, 
+  Clock,
+  Flame,
+  TrendingUp,
+  TrendingDown,
+  Sun,
+  Moon,
+  ChevronUp,
+  ChevronDown,
+  Check,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  ArrowUpDown
+} from 'lucide-react';
+
+const App = () => {
+  const [activeTab, setActiveTab] = useState('Scanner');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setTheme] = useState('dark');
+  
+  // Filter & Sort States
+  const [activeSignalFilters, setActiveSignalFilters] = useState([]);
+  const [hidePassiveHot, setHidePassiveHot] = useState(false);
+  const [sortBy, setSortBy] = useState('SIGNAL STRENGTH');
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef(null);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const toggleSignalFilter = (signal) => {
+    setActiveSignalFilters(prev => 
+      prev.includes(signal) ? prev.filter(s => s !== signal) : [...prev, signal]
+    );
+  };
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Institutional Market Data - Expanded to 20 Entries
+  const initialMarkets = [
+    {
+      id: 1,
+      title: "Fed Interest Rate Decision - March",
+      category: "Macro",
+      expiry: "Mar 20, 2026",
+      liquidity: "$12.4M",
+      liquidityRaw: 12400000,
+      vol24hPercent: 82.5,
+      vol24hAbsolute: "$11.4M",
+      openInterest: "$45.2M",
+      openInterestRaw: 45200000,
+      yesPrice: 0.72,
+      noPrice: 0.28,
+      yesOI: "$32.5M",
+      noOI: "$12.7M",
+      yesRatio: 72,
+      noRatio: 28,
+      yesOIChange: "+$12.1M", 
+      yesOIChangeRaw: 12100000,
+      yesOIDirection: "up",
+      noOIChange: "—", 
+      noOIChangeRaw: 0,
+      noOIDirection: "flat",
+      lastTrade: "2m",
+      signalRank: 100
+    },
+    {
+      id: 2,
+      title: "Spot ETH ETF Approval (Q2)",
+      category: "Crypto",
+      expiry: "May 31, 2026",
+      liquidity: "$18.5M",
+      liquidityRaw: 18500000,
+      vol24hPercent: 112.4,
+      vol24hAbsolute: "$15.1M",
+      openInterest: "$88.9M",
+      openInterestRaw: 88900000,
+      yesPrice: 0.82,
+      noPrice: 0.18,
+      yesOI: "$72.6M",
+      noOI: "$16.3M",
+      yesRatio: 82,
+      noRatio: 18,
+      yesOIChange: "+$14.2M", 
+      yesOIChangeRaw: 14200000,
+      yesOIDirection: "up",
+      noOIChange: "-$0.4M", 
+      noOIChangeRaw: -400000,
+      noOIDirection: "down",
+      lastTrade: "12s",
+      signalRank: 98
+    },
+    {
+      id: 3,
+      title: "US General Election: Winner",
+      category: "Politics",
+      expiry: "Nov 05, 2026",
+      liquidity: "$84.1M",
+      liquidityRaw: 84100000,
+      vol24hPercent: 12.0, 
+      vol24hAbsolute: "$2.1M",
+      openInterest: "$1.2B",
+      openInterestRaw: 1200000000,
+      yesPrice: 0.54,
+      noPrice: 0.46,
+      yesOI: "$648M",
+      noOI: "$552M",
+      yesRatio: 54,
+      noRatio: 46,
+      yesOIChange: "+$1.4M", 
+      yesOIChangeRaw: 1400000,
+      yesOIDirection: "up",
+      noOIChange: "+$0.8M", 
+      noOIChangeRaw: 800000,
+      noOIDirection: "up",
+      lastTrade: "3h",
+      signalRank: 80
+    },
+    {
+      id: 4,
+      title: "Mars Orbital Mission - SpaceX",
+      category: "Science",
+      expiry: "Aug 15, 2026",
+      liquidity: "$24.1M",
+      liquidityRaw: 24100000,
+      vol24hPercent: 78.4,
+      vol24hAbsolute: "$12.4M",
+      openInterest: "$112.8M",
+      openInterestRaw: 112800000,
+      yesPrice: 0.75,
+      noPrice: 0.25,
+      yesOI: "$84.6M",
+      noOI: "$28.2M",
+      yesRatio: 75,
+      noRatio: 25,
+      yesOIChange: "+$18.2M", 
+      yesOIChangeRaw: 18200000,
+      yesOIDirection: "up",
+      noOIChange: "—", 
+      noOIChangeRaw: 0,
+      noOIDirection: "flat",
+      lastTrade: "1m",
+      signalRank: 99
+    },
+    {
+      id: 5,
+      title: "OpenAI GPT-5 Release Date",
+      category: "Tech",
+      expiry: "Jun 30, 2026",
+      liquidity: "$15.8M",
+      liquidityRaw: 15800000,
+      vol24hPercent: 65.2,
+      vol24hAbsolute: "$8.4M",
+      openInterest: "$42.4M",
+      openInterestRaw: 42400000,
+      yesPrice: 0.68,
+      noPrice: 0.32,
+      yesOI: "$28.8M",
+      noOI: "$13.6M",
+      yesRatio: 68,
+      noRatio: 32,
+      yesOIChange: "+$11.2M", 
+      yesOIChangeRaw: 11200000,
+      yesOIDirection: "up",
+      noOIChange: "-$0.1M", 
+      noOIChangeRaw: -100000,
+      noOIDirection: "down",
+      lastTrade: "8m",
+      signalRank: 92
+    },
+    {
+      id: 6,
+      title: "NVIDIA Q1 Revenue > $35B",
+      category: "Tech",
+      expiry: "May 22, 2026",
+      liquidity: "$32.4M",
+      liquidityRaw: 32400000,
+      vol24hPercent: 94.1,
+      vol24hAbsolute: "$28.4M",
+      openInterest: "$156.2M",
+      openInterestRaw: 156200000,
+      yesPrice: 0.78,
+      noPrice: 0.22,
+      yesOI: "$121.8M",
+      noOI: "$34.4M",
+      yesRatio: 78,
+      noRatio: 22,
+      yesOIChange: "+$24.8M", 
+      yesOIChangeRaw: 24800000,
+      yesOIDirection: "up",
+      noOIChange: "+$0.2M", 
+      noOIChangeRaw: 200000,
+      noOIDirection: "up",
+      lastTrade: "4s",
+      signalRank: 100
+    },
+    {
+      id: 7,
+      title: "Solana TVL Hits $20B",
+      category: "Crypto",
+      expiry: "Dec 31, 2026",
+      liquidity: "$2.1M",
+      liquidityRaw: 2100000,
+      vol24hPercent: 88.5, 
+      vol24hAbsolute: "$1.8M",
+      openInterest: "$5.4M",
+      openInterestRaw: 5400000,
+      yesPrice: 0.42,
+      noPrice: 0.58,
+      yesRatio: 42,
+      noRatio: 58,
+      yesOIChange: "+$1.1M", 
+      noOIChange: "-$1.4M", 
+      yesOIChangeRaw: 1100000,
+      noOIChangeRaw: -1400000,
+      yesOIDirection: "up",
+      noOIDirection: "down",
+      lastTrade: "5m",
+      signalRank: 95
+    },
+    {
+      id: 8,
+      title: "Apple Vision Pro 2 Launch",
+      category: "Tech",
+      expiry: "Dec 31, 2026",
+      liquidity: "$14.4M",
+      liquidityRaw: 14400000,
+      vol24hPercent: 55.4,
+      vol24hAbsolute: "$6.2M",
+      openInterest: "$38.2M",
+      openInterestRaw: 38200000,
+      yesPrice: 0.70,
+      noPrice: 0.30,
+      yesOI: "$26.7M",
+      noOI: "$11.5M",
+      yesRatio: 70,
+      noRatio: 30,
+      yesOIChange: "+$7.4M", 
+      yesOIChangeRaw: 7400000,
+      yesOIDirection: "up",
+      noOIChange: "—", 
+      noOIChangeRaw: 0,
+      noOIDirection: "flat",
+      lastTrade: "12m",
+      signalRank: 91
+    },
+    {
+      id: 9,
+      title: "Global iPhone Sales Target",
+      category: "Tech",
+      expiry: "Jan 15, 2027",
+      liquidity: "$3.2M",
+      liquidityRaw: 3200000,
+      vol24hPercent: 15.5, 
+      vol24hAbsolute: "$480K",
+      openInterest: "$12.8M",
+      openInterestRaw: 12800000,
+      yesPrice: 0.58,
+      noPrice: 0.42,
+      yesRatio: 58,
+      noRatio: 42,
+      yesOIChange: "+$0.9M", 
+      noOIChange: "+$0.6M", 
+      yesOIChangeRaw: 900000,
+      noOIChangeRaw: 600000,
+      yesOIDirection: "up",
+      noOIDirection: "up",
+      lastTrade: "1h",
+      signalRank: 60
+    },
+    {
+      id: 10,
+      title: "BTC Institutional Holdings > 10M",
+      category: "Crypto",
+      expiry: "Jun 30, 2026",
+      liquidity: "$42.8M",
+      liquidityRaw: 42800000,
+      vol24hPercent: 68.2,
+      vol24hAbsolute: "$21.5M",
+      openInterest: "$245.2M",
+      openInterestRaw: 245200000,
+      yesPrice: 0.85,
+      noPrice: 0.15,
+      yesOI: "$208.4M",
+      noOI: "$36.8M",
+      yesRatio: 85,
+      noRatio: 15,
+      yesOIChange: "+$42.5M", 
+      yesOIChangeRaw: 42500000,
+      yesOIDirection: "up",
+      noOIChange: "-$1.2M", 
+      noOIChangeRaw: -1200000,
+      noOIDirection: "down",
+      lastTrade: "5s",
+      signalRank: 100
+    },
+    {
+      id: 11,
+      title: "UK General Election Date",
+      category: "Politics",
+      expiry: "Dec 31, 2026",
+      liquidity: "$5.2M",
+      liquidityRaw: 5200000,
+      vol24hPercent: 4.2, 
+      vol24hAbsolute: "$210K",
+      openInterest: "$18.4M",
+      openInterestRaw: 18400000,
+      yesPrice: 0.45,
+      noPrice: 0.55,
+      yesOI: "$8.2M",
+      noOI: "$10.2M",
+      yesRatio: 45,
+      noRatio: 55,
+      yesOIChange: "+$0.2M", 
+      noOIChange: "+$0.3M", 
+      yesOIChangeRaw: 200000,
+      noOIChangeRaw: 300000,
+      yesOIDirection: "up",
+      noOIDirection: "up",
+      lastTrade: "45m",
+      signalRank: 40
+    },
+    {
+      id: 12,
+      title: "ETH Price > $10,000",
+      category: "Crypto",
+      expiry: "Dec 31, 2026",
+      liquidity: "$22.4M",
+      liquidityRaw: 22400000,
+      vol24hPercent: 89.2, // STRONG TREND
+      vol24hAbsolute: "$18.4M",
+      openInterest: "$92.1M",
+      openInterestRaw: 92100000,
+      yesPrice: 0.24,
+      noPrice: 0.76,
+      yesOI: "$22.1M",
+      noOI: "$70.0M",
+      yesRatio: 24,
+      noRatio: 76,
+      yesOIChange: "-$0.2M", 
+      noOIChange: "+$12.5M", // One-sided Accumulation on NO
+      yesOIChangeRaw: -200000,
+      noOIChangeRaw: 12500000,
+      yesOIDirection: "down",
+      noOIDirection: "up",
+      lastTrade: "1m",
+      signalRank: 96
+    },
+    {
+      id: 13,
+      title: "Super Bowl LXI Winner",
+      category: "Sports",
+      expiry: "Feb 10, 2027",
+      liquidity: "$8.4M",
+      liquidityRaw: 8400000,
+      vol24hPercent: 32.1, // SMART ACCUMULATION
+      vol24hAbsolute: "$1.2M",
+      openInterest: "$22.5M",
+      openInterestRaw: 22500000,
+      yesPrice: 0.62,
+      noPrice: 0.38,
+      yesOI: "$13.9M",
+      noOI: "$8.6M",
+      yesRatio: 62,
+      noRatio: 38,
+      yesOIChange: "+$3.2M", 
+      noOIChange: "-$0.1M", 
+      yesOIChangeRaw: 3200000,
+      noOIChangeRaw: -100000,
+      yesOIDirection: "up",
+      noOIDirection: "down",
+      lastTrade: "5m",
+      signalRank: 88
+    },
+    {
+      id: 14,
+      title: "OpenAI Sora Public Access",
+      category: "Tech",
+      expiry: "Jun 15, 2026",
+      liquidity: "$11.2M",
+      liquidityRaw: 11200000,
+      vol24hPercent: 71.5, // STRONG TREND
+      vol24hAbsolute: "$8.1M",
+      openInterest: "$34.2M",
+      openInterestRaw: 34200000,
+      yesPrice: 0.74,
+      noPrice: 0.26,
+      yesOI: "$25.3M",
+      noOI: "$8.9M",
+      yesRatio: 74,
+      noRatio: 26,
+      yesOIChange: "+$6.4M", 
+      yesOIChangeRaw: 6400000,
+      yesOIDirection: "up",
+      noOIChange: "—", 
+      noOIChangeRaw: 0,
+      noOIDirection: "flat",
+      lastTrade: "30s",
+      signalRank: 94
+    },
+    {
+      id: 15,
+      title: "TSMC 2nm Mass Production",
+      category: "Tech",
+      expiry: "Dec 31, 2026",
+      liquidity: "$4.8M",
+      liquidityRaw: 4800000,
+      vol24hPercent: 18.2, 
+      vol24hAbsolute: "$840K",
+      openInterest: "$15.1M",
+      openInterestRaw: 15100000,
+      yesPrice: 0.64,
+      noPrice: 0.36,
+      yesOI: "$9.6M",
+      noOI: "$5.5M",
+      yesRatio: 64,
+      noRatio: 36,
+      yesOIChange: "+$1.1M", 
+      noOIChange: "+$0.2M", 
+      yesOIChangeRaw: 1100000,
+      noOIChangeRaw: 200000,
+      yesOIDirection: "up",
+      noOIDirection: "up",
+      lastTrade: "12m",
+      signalRank: 75
+    },
+    {
+      id: 16,
+      title: "Artemis III Lunar Landing Success",
+      category: "Science",
+      expiry: "Dec 31, 2026",
+      liquidity: "$12.9M",
+      liquidityRaw: 12900000,
+      vol24hPercent: 62.4, // STRONG TREND
+      vol24hAbsolute: "$7.5M",
+      openInterest: "$52.8M",
+      openInterestRaw: 52800000,
+      yesPrice: 0.68,
+      noPrice: 0.32,
+      yesOI: "$35.9M",
+      noOI: "$16.9M",
+      yesRatio: 68,
+      noRatio: 32,
+      yesOIChange: "+$11.4M", 
+      yesOIChangeRaw: 11400000,
+      yesOIDirection: "up",
+      noOIChange: "-$0.1M", 
+      noOIChangeRaw: -100000,
+      noOIDirection: "down",
+      lastTrade: "3m",
+      signalRank: 93
+    },
+    {
+      id: 17,
+      title: "Oscar 2027 Best Picture Winner",
+      category: "Entertainment",
+      expiry: "Mar 15, 2027",
+      liquidity: "$2.1M",
+      liquidityRaw: 2100000,
+      vol24hPercent: 5.4, 
+      vol24hAbsolute: "$110K",
+      openInterest: "$4.8M",
+      openInterestRaw: 4800000,
+      yesPrice: 0.42,
+      noPrice: 0.58,
+      yesOI: "$2.0M",
+      noOI: "$2.8M",
+      yesRatio: 42,
+      noRatio: 58,
+      yesOIChange: "+$0.1M", 
+      noOIChange: "+$0.1M", 
+      yesOIChangeRaw: 100000,
+      noOIChangeRaw: 100000,
+      yesOIDirection: "up",
+      noOIDirection: "up",
+      lastTrade: "2h",
+      signalRank: 35
+    },
+    {
+      id: 18,
+      title: "Federal Reserve Pivot Q4 2026",
+      category: "Macro",
+      expiry: "Dec 31, 2026",
+      liquidity: "$21.5M",
+      liquidityRaw: 21500000,
+      vol24hPercent: 84.1, // STRONG TREND
+      vol24hAbsolute: "$18.4M",
+      openInterest: "$88.2M",
+      openInterestRaw: 88200000,
+      yesPrice: 0.76,
+      noPrice: 0.24,
+      yesOI: "$67.0M",
+      noOI: "$21.2M",
+      yesRatio: 76,
+      noRatio: 24,
+      yesOIChange: "+$15.8M", 
+      yesOIChangeRaw: 15800000,
+      yesOIDirection: "up",
+      noOIChange: "—", 
+      noOIChangeRaw: 0,
+      noOIDirection: "flat",
+      lastTrade: "10s",
+      signalRank: 97
+    },
+    {
+      id: 19,
+      title: "Solana Mobile 3 Pre-orders > 500k",
+      category: "Crypto",
+      expiry: "Dec 31, 2026",
+      liquidity: "$3.5M",
+      liquidityRaw: 3500000,
+      vol24hPercent: 41.2, // SMART ACCUMULATION
+      vol24hAbsolute: "$1.4M",
+      openInterest: "$11.2M",
+      openInterestRaw: 11200000,
+      yesPrice: 0.65,
+      noPrice: 0.35,
+      yesOI: "$7.3M",
+      noOI: "$3.9M",
+      yesRatio: 65,
+      noRatio: 35,
+      yesOIChange: "+$2.1M", 
+      yesOIChangeRaw: 2100000,
+      yesOIDirection: "up",
+      noOIChange: "-$0.1M", 
+      noOIChangeRaw: -100000,
+      noOIDirection: "down",
+      lastTrade: "8m",
+      signalRank: 87
+    },
+    {
+      id: 20,
+      title: "FIFA World Cup 2026 Finalist: USA",
+      category: "Sports",
+      expiry: "Jul 19, 2026",
+      liquidity: "$14.1M",
+      liquidityRaw: 14100000,
+      vol24hPercent: 91.4, // STRONG TREND
+      vol24hAbsolute: "$12.8M",
+      openInterest: "$42.4M",
+      openInterestRaw: 42400000,
+      yesPrice: 0.35,
+      noPrice: 0.65,
+      yesRatio: 35,
+      noRatio: 65,
+      yesOIChange: "-$0.4M", 
+      noOIChange: "+$18.1M", // Massive position building on NO
+      yesOIChangeRaw: -400000,
+      noOIChangeRaw: 18100000,
+      yesOIDirection: "down",
+      noOIDirection: "up",
+      lastTrade: "4s",
+      signalRank: 98
+    }
+  ];
+
+  // Magnitude Encoding Logic
+  const getMagnitudeStyles = (value, type) => {
+    const absVal = Math.abs(value);
+    let tier = 'weak';
+    
+    if (type === 'percent') {
+      if (absVal >= 80) tier = 'extreme';
+      else if (absVal >= 30) tier = 'strong';
+      else if (absVal >= 10) tier = 'medium';
+    } else { 
+      if (absVal >= 10000000) tier = 'extreme';
+      else if (absVal >= 3000000) tier = 'strong';
+      else if (absVal >= 500000) tier = 'medium';
+    }
+
+    const isPositive = value > 0;
+
+    switch (tier) {
+      case 'extreme':
+        return {
+          text: `text-[18px] font-black tracking-tighter tabular-nums ${isPositive ? 'text-emerald-400' : 'text-rose-400'} drop-shadow-[0_0_15px_rgba(52,211,153,0.6)]`,
+          icon: <Flame className={`w-5 h-5 fill-current ${isPositive ? 'text-emerald-400' : 'text-rose-400'} animate-pulse`} />,
+          brightness: 'opacity-100'
+        };
+      case 'strong':
+        return {
+          text: `text-[15px] font-black tracking-tight tabular-nums ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`,
+          icon: isPositive ? <ArrowUp className="w-5 h-5 text-emerald-500 stroke-[3px]" /> : <ArrowDown className="w-5 h-5 text-rose-500 stroke-[3px]" />,
+          brightness: 'opacity-100'
+        };
+      case 'medium':
+        return {
+          text: `text-[13px] font-bold tabular-nums ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`,
+          icon: isPositive ? <ChevronUp className="w-4 h-4 text-emerald-500" /> : <ChevronDown className="w-4 h-4 text-rose-500" />,
+          brightness: 'opacity-100'
+        };
+      default: 
+        return {
+          text: `text-[11px] font-medium tabular-nums ${isPositive ? 'text-emerald-600/80' : 'text-rose-600/80'}`,
+          icon: isPositive ? <ChevronUp className="w-3 h-3 opacity-60" /> : <ChevronDown className="w-3 h-3 opacity-60" />,
+          brightness: 'opacity-80'
+        };
+    }
+  };
+
+  const getMarketState = (m) => {
+    const dominantRatio = Math.max(m.yesRatio, m.noRatio);
+    const dominantSide = m.yesRatio > m.noRatio ? 'YES' : 'NO';
+    const domDelta = dominantSide === 'YES' ? (m.yesOIChangeRaw || 0) : (m.noOIChangeRaw || 0);
+    const oppDelta = dominantSide === 'YES' ? (m.noOIChangeRaw || 0) : (m.yesOIChangeRaw || 0);
+    const totalOIDelta = (m.yesOIChangeRaw || 0) + (m.noOIChangeRaw || 0);
+
+    if (m.vol24hPercent > 100 && (m.liquidityRaw || 0) < 500000) return "HOT / NOISY";
+    if (m.vol24hPercent > 80 && domDelta < 0 && oppDelta > 0) return "EARLY REVERSAL";
+    if (m.vol24hPercent > 50 && totalOIDelta > 0 && domDelta > (Math.abs(oppDelta) * 3) && dominantRatio > 65 && oppDelta <= 0) return "STRONG TREND";
+    if (m.vol24hPercent > 0 && domDelta > 0 && oppDelta <= 0 && dominantRatio >= 60 && dominantRatio <= 75) return "SMART ACCUMULATION";
+    if (m.vol24hPercent <= 15 && totalOIDelta > 0) return "POSITION BUILDING";
+    return "BALANCED";
+  };
+
+  const signalMetadata = {
+    "STRONG TREND": { sub: "One-sided accumulation", triggers: ["Flow > +50%", "Unilateral Entry", "Ratio > 65/35"], color: "text-emerald-300 border-emerald-500 bg-emerald-500/20" },
+    "SMART ACCUMULATION": { sub: "Early smart entry", triggers: ["Flow positive", "Dom OI delta > 0", "Opp flat"], color: "text-blue-300 border-blue-500 bg-blue-500/20" },
+    "POSITION BUILDING": { sub: "Institutions positioning", triggers: ["Vol flat/neg", "Both sides entry"], color: "text-indigo-300 border-indigo-500 bg-indigo-500/20" },
+    "PASSIVE CONSENSUS": { sub: "Market already priced in", triggers: ["Vol < 15%", "Natural positioning"], color: "text-neutral-300 border-neutral-700 bg-neutral-700/20" },
+    "HOT / NOISY": { sub: "High noise, low edge", triggers: ["Flow > +100%", "Unclear direction"], color: "text-amber-300 border-amber-500 bg-amber-500/20" },
+    "EARLY REVERSAL": { sub: "Divergence detected", triggers: ["Dom Exit", "Opp Entry", "High Flow"], color: "text-rose-300 border-rose-500 bg-rose-500/20" },
+    "BALANCED": { sub: "Neutral distribution", triggers: ["Ratio near 50/50", "Mixed flows"], color: "text-neutral-300 border-neutral-700 bg-neutral-700/20" }
+  };
+
+  const filteredAndSortedMarkets = useMemo(() => {
+    let processed = initialMarkets.map(m => ({ ...m, state: getMarketState(m) }));
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      processed = processed.filter(m => m.title.toLowerCase().includes(q) || m.category.toLowerCase().includes(q));
+    }
+    if (activeSignalFilters.length > 0) processed = processed.filter(m => activeSignalFilters.includes(m.state));
+    if (hidePassiveHot) processed = processed.filter(m => m.state !== "PASSIVE CONSENSUS" && m.state !== "HOT / NOISY" && m.state !== "BALANCED");
+    
+    processed.sort((a, b) => {
+      switch (sortBy) {
+        case 'FLOW MOMENTUM (24H)': return b.vol24hPercent - a.vol24hPercent;
+        case 'NET OI CHANGE HIGH → LOW': return (b.yesOIChangeRaw + b.noOIChangeRaw) - (a.yesOIChangeRaw + a.noOIChangeRaw);
+        case 'OPEN INTEREST SIZE': return b.openInterestRaw - a.openInterestRaw;
+        case 'ONE-SIDED ACCUMULATION FIRST': return Math.abs(b.yesRatio - b.noRatio) - Math.abs(a.yesRatio - a.noRatio);
+        default: return b.signalRank - a.signalRank;
+      }
+    });
+    return processed;
+  }, [searchQuery, activeSignalFilters, hidePassiveHot, sortBy]);
+
+  const isDark = theme === 'dark';
+  const bgColor = isDark ? 'bg-[#080808]' : 'bg-[#f5f5f5]';
+  const headerBg = isDark ? 'bg-[#0d0d0d]' : 'bg-white';
+  const borderColor = isDark ? 'border-[#222222]' : 'border-neutral-300';
+  const primaryText = isDark ? 'text-[#f4f4f5]' : 'text-neutral-900';
+
+  const sortGroups = [
+    { label: "Primary Signal", options: ["SIGNAL STRENGTH"] },
+    { label: "Flow & Position", options: ["FLOW MOMENTUM (24H)", "NET OI CHANGE HIGH → LOW", "ONE-SIDED ACCUMULATION FIRST"] },
+    { label: "Market Size", options: ["OPEN INTEREST SIZE"] },
+    { label: "Activity", options: ["LATEST ACTIVITY"] }
+  ];
+
+  return (
+    <div className={`min-h-screen ${bgColor} text-neutral-400 font-sans selection:bg-white/30 overflow-hidden flex flex-col transition-colors duration-200`}>
+      <style>{`
+        @keyframes flow-in-streak {
+          0% { transform: translateX(-100%); opacity: 0; }
+          20% { opacity: 0.8; }
+          80% { opacity: 0.8; }
+          100% { transform: translateX(200%); opacity: 0; }
+        }
+        @keyframes flow-out-streak {
+          0% { transform: translateX(200%); opacity: 0; }
+          20% { opacity: 0.8; }
+          80% { opacity: 0.8; }
+          100% { transform: translateX(-100%); opacity: 0; }
+        }
+        .animate-flow-streak-right { animation: flow-in-streak 2.5s infinite linear; }
+        .animate-flow-streak-left { animation: flow-out-streak 2.5s infinite linear; }
+      `}</style>
+
+      {/* Navigation Header */}
+      <header className={`h-[60px] border-b ${borderColor} ${headerBg} flex items-center px-6 shrink-0 z-50`}>
+        <div className="flex items-center gap-12 w-full">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-7 h-7 ${isDark ? 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-neutral-900'} rounded flex items-center justify-center`}>
+              <Zap className={`${isDark ? 'text-black' : 'text-white'} w-4 h-4 fill-current`} />
+            </div>
+            <span className={`text-lg font-black tracking-[-0.05em] ${isDark ? 'text-white' : 'text-neutral-900'} uppercase italic`}>Fores</span>
+          </div>
+          <nav className="flex items-center gap-1">
+            {['Scanner', 'Alpha Feed', 'Whale Watch', 'Intelligence'].map((tab) => (
+              <button 
+                key={tab} 
+                onClick={() => setActiveTab(tab)} 
+                className={`px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                  activeTab === tab 
+                  ? `${isDark ? 'text-white bg-white/15' : 'text-neutral-900 bg-neutral-200'} rounded-md` 
+                  : `text-neutral-500 ${isDark ? 'hover:text-white' : 'hover:text-neutral-900'}`
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+          <div className="relative flex-grow max-w-md ml-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500" />
+            <input 
+              type="text" 
+              placeholder="Search markets..." 
+              className={`w-full ${isDark ? 'bg-[#141414]' : 'bg-neutral-100'} border ${borderColor} rounded-lg py-2 pl-10 pr-4 text-xs focus:outline-none focus:ring-1 ${isDark ? 'focus:ring-white/30' : 'focus:ring-neutral-900/30'} transition-all ${isDark ? 'text-neutral-400 placeholder-neutral-600' : 'text-neutral-900 placeholder-neutral-400'}`} 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+            />
+          </div>
+          <div className="flex items-center gap-4 ml-auto">
+            <button onClick={toggleTheme} className={`p-2 rounded-lg border ${borderColor} ${isDark ? 'bg-[#141414]' : 'bg-neutral-100'} hover:bg-white/5 transition-colors`}>
+              {isDark ? <Sun className="w-4 h-4 text-white" /> : <Moon className="w-4 h-4 text-neutral-600" />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Control Bar */}
+      <div className={`h-[56px] border-b ${borderColor} ${isDark ? 'bg-[#080808]' : 'bg-neutral-50'} flex items-center px-6 gap-6 shrink-0`}>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mr-2">Filters:</span>
+          {["STRONG TREND", "SMART ACCUMULATION", "POSITION BUILDING"].map(sig => (
+            <button 
+              key={sig} 
+              onClick={() => toggleSignalFilter(sig)} 
+              className={`px-3 py-1.5 text-[9px] font-black rounded-sm border transition-all ${activeSignalFilters.includes(sig) ? 'bg-white text-black border-white' : 'bg-transparent border-[#222222] text-neutral-500 hover:text-neutral-200'}`}
+            >
+              {sig}
+            </button>
+          ))}
+        </div>
+        <div className="h-5 w-[1px] bg-[#222222]" />
+        <button onClick={() => setHidePassiveHot(!hidePassiveHot)} className="flex items-center gap-2 group">
+          <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${hidePassiveHot ? 'bg-emerald-500 border-emerald-500' : 'border-[#444444] group-hover:border-neutral-500'}`}>
+            {hidePassiveHot && <Check className="w-3 h-3 text-black stroke-[4px]" />}
+          </div>
+          <span className={`text-[10px] font-black uppercase tracking-widest ${hidePassiveHot ? 'text-emerald-500' : 'text-neutral-500'}`}>Hide Passive / Hot</span>
+        </button>
+
+        {/* CUSTOM INSTITUTIONAL SORT DROPDOWN */}
+        <div className="ml-auto flex items-center gap-4 relative" ref={sortRef}>
+          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-600">Sort By</span>
+          <button 
+            onClick={() => setIsSortOpen(!isSortOpen)}
+            className={`flex items-center gap-3 px-1 py-1 group transition-all`}
+          >
+            <span className={`text-[11px] font-black tracking-tight text-white uppercase`}>{sortBy}</span>
+            <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${isSortOpen ? 'rotate-180 text-white' : 'group-hover:text-white'}`} />
+          </button>
+
+          {isSortOpen && (
+            <div className="absolute top-full right-0 mt-2 w-64 bg-[#0d0d0d] border border-[#222222] rounded-sm shadow-[0_12px_40px_rgba(0,0,0,0.9)] py-1.5 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+              {sortGroups.map((group, gIdx) => (
+                <div key={group.label}>
+                  <div className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-neutral-600">
+                    {group.label}
+                  </div>
+                  {group.options.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => { setSortBy(opt); setIsSortOpen(false); }}
+                      className={`w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold tracking-tight transition-colors hover:bg-[#1a1a1a] ${sortBy === opt ? 'text-white' : 'text-neutral-500 hover:text-white'}`}
+                    >
+                      <span className="uppercase">{opt}</span>
+                      {sortBy === opt && <Check className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  ))}
+                  {gIdx < sortGroups.length - 1 && <div className="mx-2 my-1.5 h-[1px] bg-white/5" />}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Table Container */}
+      <main className="flex-grow overflow-auto no-scrollbar">
+        <table className="w-full border-separate border-spacing-0">
+          <thead className="sticky top-0 z-10">
+            <tr className={`${isDark ? 'bg-[#111111]' : 'bg-neutral-100'} border-b ${borderColor}`}>
+              <th className={`text-left py-4 px-6 text-[10px] font-bold text-neutral-500 uppercase tracking-widest min-w-[240px] border-b border-inherit`}>Market Topic</th>
+              <th className={`text-right py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-inherit`}>Liquidity</th>
+              <th className={`text-right py-4 px-4 text-[10px] font-black ${isDark ? 'text-white bg-white/5' : 'text-neutral-900 bg-neutral-200'} uppercase tracking-widest border-b border-white/10 w-[190px]`}>24H Vol Flow</th>
+              <th className={`text-right py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-inherit`}>OI Size</th>
+              <th className={`text-center py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-inherit`}>Price (Y/N)</th>
+              <th className={`text-center py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest min-w-[660px] border-b border-inherit`}>Position Behavior (24h OI Delta)</th>
+              <th className={`text-center py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-inherit`}>Signal</th>
+              <th className={`text-right py-4 px-6 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-inherit`}>Updated</th>
+            </tr>
+          </thead>
+          <tbody className={`divide-y ${isDark ? 'divide-[#1a1a1a]' : 'divide-neutral-200'}`}>
+            {filteredAndSortedMarkets.map((m) => {
+              const volFlowStyles = getMagnitudeStyles(m.vol24hPercent, 'percent');
+              const yesDeltaStyles = getMagnitudeStyles(m.yesOIChangeRaw, 'currency');
+              const noDeltaStyles = getMagnitudeStyles(m.noOIChangeRaw, 'currency');
+
+              return (
+                <tr key={`${m.id}-${m.title}`} className={`group transition-all ${isDark ? 'hover:bg-[#111111]' : 'hover:bg-neutral-100/50'}`}>
+                  {/* Column 1: Market Details */}
+                  <td className={`py-6 px-6 border-r ${borderColor}`}>
+                    <div className="flex flex-col">
+                      <span className={`${primaryText} font-bold text-[13px] tracking-tight transition-colors`}>{m.title}</span>
+                      <div className="flex gap-2 items-center mt-1">
+                        <span className="text-[9px] text-neutral-500 font-black uppercase tracking-wider">{m.category}</span>
+                        <span className={`w-0.5 h-0.5 rounded-full ${isDark ? 'bg-neutral-700' : 'bg-neutral-300'}`} />
+                        <span className="text-[9px] text-neutral-500 font-medium uppercase">{m.expiry}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Column 2: Liquidity */}
+                  <td className={`py-6 px-4 text-right font-mono text-[11px] tabular-nums ${isDark ? 'text-neutral-300 font-bold' : 'text-neutral-700'}`}>{m.liquidity}</td>
+                  
+                  {/* Column 3: Flow */}
+                  <td className={`py-6 px-4 text-right bg-white/[0.02] ${volFlowStyles.brightness}`}>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        {volFlowStyles.icon}
+                        <span className={volFlowStyles.text}>
+                          {m.vol24hPercent > 0 ? '+' : ''}{m.vol24hPercent}%
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-neutral-500 font-mono font-bold">{m.vol24hAbsolute}</span>
+                    </div>
+                  </td>
+
+                  {/* Column 4: OI Size */}
+                  <td className={`py-6 px-4 text-right font-mono text-[11px] tabular-nums ${primaryText} font-bold`}>{m.openInterest}</td>
+                  
+                  {/* Column 5: Prices */}
+                  <td className={`py-6 px-4 text-center border-x ${borderColor}`}>
+                    <div className="flex items-center justify-center gap-3 text-[11px] font-mono font-black tracking-tighter tabular-nums opacity-90 group-hover:opacity-100 transition-opacity">
+                      <span className="text-emerald-500">${m.yesPrice.toFixed(2)}</span>
+                      <span className={isDark ? 'text-neutral-700' : 'text-neutral-300'}>/</span>
+                      <span className="text-rose-500">${m.noPrice.toFixed(2)}</span>
+                    </div>
+                  </td>
+
+                  {/* Column 6: Advanced OI Delta Module */}
+                  <td className={`py-6 px-10 relative overflow-hidden ${isDark ? 'bg-[#080808]' : 'bg-slate-50/20'}`}>
+                    <div className="flex flex-col items-center gap-3 relative z-10">
+                      <div className="flex justify-between w-[380px] text-[8px] font-black font-mono tracking-[0.2em] uppercase opacity-70">
+                        <span className={isDark ? 'text-neutral-200' : 'text-neutral-500'}>YES {m.yesRatio}%</span>
+                        <span className={isDark ? 'text-neutral-200' : 'text-neutral-500'}>NO {m.noRatio}%</span>
+                      </div>
+
+                      <div className="flex items-center gap-12 relative w-full justify-center">
+                        <div className={`flex flex-col items-end min-w-[130px] transition-all`}>
+                          <div className={`flex items-center gap-2 ${yesDeltaStyles.text}`}>
+                            {yesDeltaStyles.icon}
+                            {m.yesOIChange}
+                          </div>
+                          <span className="text-[10px] font-mono text-neutral-500 font-bold tracking-tighter uppercase opacity-80 mt-1">Total: {m.yesOI}</span>
+                        </div>
+
+                        {/* Animated Structural Bar */}
+                        <div className={`relative w-[380px] h-[10px] rounded-full overflow-hidden flex ${isDark ? 'bg-white/[0.08] border border-white/[0.15]' : 'bg-neutral-200 shadow-inner'}`}>
+                          <div className={`h-full transition-all duration-700 relative ${isDark ? 'bg-emerald-900/60' : 'bg-emerald-200'}`} style={{ width: `${m.yesRatio}%` }}>
+                            {m.yesOIChangeRaw > 0 && (
+                              <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-emerald-500/0 via-emerald-500/60 to-emerald-500/0 animate-flow-streak-right" />
+                            )}
+                          </div>
+                          <div className={`h-full transition-all duration-700 relative ${isDark ? 'bg-rose-900/60' : 'bg-rose-200'}`} style={{ width: `${m.noRatio}%` }}>
+                             {m.noOIChangeRaw > 0 && (
+                              <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-rose-500/0 via-rose-500/60 to-rose-500/0 animate-flow-streak-left" />
+                            )}
+                          </div>
+                          <div className={`absolute left-1/2 top-0 bottom-0 w-[1.5px] ${isDark ? 'bg-white/40' : 'bg-neutral-400'} z-20`}></div>
+                        </div>
+
+                        <div className={`flex flex-col items-start min-w-[130px] transition-all`}>
+                          <div className={`flex items-center gap-2 ${noDeltaStyles.text}`}>
+                            {noDeltaStyles.icon}
+                            {m.noOIChange}
+                          </div>
+                          <span className="text-[10px] font-mono text-neutral-500 font-bold tracking-tighter uppercase opacity-80 mt-1">Total: {m.noOI}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Column 7: Signal Tags */}
+                  <td className="py-6 px-4 text-center">
+                     <div className="relative group/tooltip inline-block">
+                      <span className={`inline-block px-3 py-1.5 rounded-[2px] border text-[9px] font-black tracking-widest transition-all cursor-default ${signalMetadata[m.state]?.color || 'border-neutral-700 text-neutral-400'}`}>{m.state}</span>
+                      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-52 p-4 ${isDark ? 'bg-[#0d0d0d] border-[#222222]' : 'bg-white border-neutral-300'} border rounded-sm shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-[60]`}>
+                        <div className="flex flex-col gap-2 text-left">
+                          <span className="text-[8px] font-bold text-neutral-500 uppercase tracking-[0.2em] border-b border-inherit pb-1 mb-1">State Definition</span>
+                          <span className={`text-[10px] font-black tracking-tighter text-white uppercase`}>{signalMetadata[m.state]?.sub}</span>
+                          <div className="flex flex-col gap-1 pt-1">
+                            <span className="text-[8px] font-bold text-neutral-500 uppercase">Structural Triggers</span>
+                            {signalMetadata[m.state]?.triggers.map((t, i) => (
+                              <div key={i} className="flex justify-between text-[9px]"><span className="text-neutral-400">• {t}</span></div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={`absolute top-full left-1/2 -translate-x-1/2 border-x-[7px] border-x-transparent border-t-[7px] ${isDark ? 'border-t-[#222222]' : 'border-t-neutral-300'}`} />
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="py-6 px-6 text-right font-mono text-[11px] text-neutral-500 tabular-nums whitespace-nowrap">{m.lastTrade}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </main>
+
+      {/* Footer */}
+      <footer className={`h-8 ${isDark ? 'bg-[#111111]' : 'bg-slate-100'} border-t ${borderColor} flex items-center px-6 shrink-0 transition-colors duration-200`}>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-emerald-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Global Market Pulse Stream Active</span>
+          </div>
+          <div className={`h-3 w-[1px] ${borderColor}`} />
+          <div className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest flex gap-6">
+            <span className="flex gap-2">POOLS: <span className={isDark ? 'text-white' : 'text-neutral-900'}>1,402</span></span>
+            <span className="flex gap-2">TVL: <span className={isDark ? 'text-white' : 'text-neutral-900'}>$4.1B</span></span>
+            <span className="flex gap-2 text-emerald-500 uppercase">Real-Time Flow: <span className="font-black animate-pulse">Detecting</span></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
